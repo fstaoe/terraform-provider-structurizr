@@ -1,0 +1,10 @@
+services:
+  structurizr:
+    image: structurizr/onpremises:2024.03.03
+    volumes:
+      - ./structurizr.properties:/usr/local/structurizr/structurizr.properties
+    ports:
+      - 8080:8080
+    environment:
+      STRUCTURIZR_DATA: file
+      STRUCTURIZR_ADMIN_API_KEY: "$2a$10$9/o1O.l88/GETT4HCUc7iuPdq4X42LsEykHXN/Dp9oOsDDb1li9Si" # structurizr
