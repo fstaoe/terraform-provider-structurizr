@@ -4,6 +4,10 @@
 
 Terraform Provider for Structurizr [On-Premises](https://docs.structurizr.com/onpremises) and [Cloud Service](https://docs.structurizr.com/cloud). 
 
+<div style="text-align: center;">
+  <img width="880" src="https://raw.githubusercontent.com/fstaoe/terraform-provider-structurizr/main/examples/tf-run.svg?sanitize=true" alt="Run the example">
+</div>
+
 Example:
 
 ```hcl
