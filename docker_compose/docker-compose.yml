@@ -8,3 +8,4 @@ services:
     environment:
       STRUCTURIZR_DATA: file
       STRUCTURIZR_ADMIN_API_KEY: "$2a$10$9/o1O.l88/GETT4HCUc7iuPdq4X42LsEykHXN/Dp9oOsDDb1li9Si" # structurizr
+      STRUCTURIZR_ENCRYPTION: ${STRUCTURIZR_ENCRYPTION:-}

@@ -25,9 +25,9 @@ provider "structurizr" {
 
 ### Required
 
-- `host` (String) A fully qualified hostname (e.g. https://myapi.structurizr.com)
+- `host` (String) A fully qualified hostname (e.g. https://my.structurizr.instance)
 
 ### Optional
 
 - `admin_api_key` (String, Sensitive) An API Key to be authorised against Structurizr API
-- `tls_insecure` (Boolean) Disable TLS verification checks for privately hosted structurizr
+- `tls_insecure` (Boolean) Disable TLS verification checks for self-hosted structurizr with self-signed certificates

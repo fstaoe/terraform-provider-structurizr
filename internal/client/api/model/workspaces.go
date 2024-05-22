@@ -18,7 +18,7 @@ type Workspaces struct {
 }
 
 // FindByID returns a workspace by its ID
-func (w *Workspaces) FindByID(id int64) *Workspace {
+func (w *Workspaces) FindByID(id any) *Workspace {
 	for _, workspace := range w.Workspaces {
 		if workspace.ID == id {
 			return workspace
