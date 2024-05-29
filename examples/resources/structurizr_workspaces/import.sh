@@ -1,1 +1,0 @@
-terraform import structurizr_workspaces.example 1

@@ -2,8 +2,16 @@
 # behavior.
 before:
   hooks:
-    # this is just an example and not a requirement for provider building/publishing
     - go mod tidy
+    - make deps
+    - mkdir -p dist/tools/structurizr-cli dist/tools/structurizr-cli/lib
+    - cp -r internal/client/cli/tools/structurizr-cli/lib/*.jar dist/tools/structurizr-cli/lib/
+    - cp internal/client/cli/tools/structurizr-cli/version.txt dist/tools/structurizr-cli/
+    - cp internal/client/cli/tools/structurizr-cli/structurizr.sh dist/tools/structurizr-cli/structurizr-freebsd.sh
+    - cp internal/client/cli/tools/structurizr-cli/structurizr.sh dist/tools/structurizr-cli/structurizr-linux.sh
+    - cp internal/client/cli/tools/structurizr-cli/structurizr.sh dist/tools/structurizr-cli/structurizr-darwin.sh
+    - cp internal/client/cli/tools/structurizr-cli/structurizr.bat dist/tools/structurizr-cli/structurizr-windows.bat
+
 builds:
 - env:
     # goreleaser does not work with CGO, it could also complicate
@@ -29,15 +37,22 @@ builds:
     - goos: darwin
       goarch: '386'
   binary: '{{ .ProjectName }}_v{{ .Version }}'
+
 archives:
 - format: zip
   name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+  files:
+    - dist/tools/structurizr-cli/lib/*.jar
+    - dist/tools/structurizr-cli/structurizr-{{.Os}}.sh
+    - dist/tools/structurizr-cli/structurizr-{{.Os}}.bat
+
 checksum:
   extra_files:
     - glob: 'terraform-registry-manifest.json'
       name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
   name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
   algorithm: sha256
+
 signs:
   - artifacts: checksum
     args:
@@ -50,11 +65,13 @@ signs:
       - "${signature}"
       - "--detach-sign"
       - "${artifact}"
+
 release:
   extra_files:
     - glob: 'terraform-registry-manifest.json'
       name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
   # If you want to manually examine the release before its live, uncomment this line:
-  # draft: true
+  draft: true
+
 changelog:
   skip: true

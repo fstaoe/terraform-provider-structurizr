@@ -3,9 +3,10 @@ package provider
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/types"
-
 	"github.com/fstaoe/terraform-provider-structurizr/internal/client"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 )
@@ -40,7 +41,7 @@ func NewWorkspacesDataSource() datasource.DataSource {
 
 // workspacesDataSource is the data source implementation.
 type workspacesDataSource struct {
-	client *client.Structurizr
+	client *client.Manager
 }
 
 // Configure adds the provider configured client to the data source.
@@ -53,12 +54,12 @@ func (d *workspacesDataSource) Configure(
 		return
 	}
 
-	c, ok := req.ProviderData.(*client.Structurizr)
+	c, ok := req.ProviderData.(*client.Manager)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf(
-				"Expected *client.Structurizr, got: %T. Please report this issue to the provider developers.",
+				"Expected *client.Manager, got: %T. Please report this issue to the provider developers.",
 				req.ProviderData,
 			),
 		)
@@ -69,7 +70,7 @@ func (d *workspacesDataSource) Configure(
 	d.client = c
 }
 
-// Metadata returns the data source type name.
+// Metadata returns the data source type name. It can be used to register other type of information
 func (d *workspacesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_workspaces"
 }
@@ -83,30 +84,38 @@ func (d *workspacesDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.Int64Attribute{
-							Computed: true,
+							Computed:    true,
+							Description: "The identifier of the Workspace used to perform further operations.",
 						},
 						"name": schema.StringAttribute{
-							Computed: true,
+							Computed:    true,
+							Description: "The name of the Workspace",
 						},
 						"description": schema.StringAttribute{
-							Computed: true,
+							Computed:    true,
+							Description: "The description of the Workspace explaining roughly what it is about.",
 						},
 						"api_key": schema.StringAttribute{
-							Computed:  true,
-							Sensitive: true,
+							Computed:    true,
+							Sensitive:   true,
+							Description: "The API key specific to the Workspace used to perform operations such as update.",
 						},
 						"api_secret": schema.StringAttribute{
-							Computed:  true,
-							Sensitive: true,
+							Computed:    true,
+							Sensitive:   true,
+							Description: "The API secret key specific to the Workspace used to perform operations such as update.",
 						},
 						"public_url": schema.StringAttribute{
-							Computed: true,
+							Computed:    true,
+							Description: "A public URL that does not require authentication to access the Workspace.",
 						},
 						"private_url": schema.StringAttribute{
-							Computed: true,
+							Computed:    true,
+							Description: "A private URL that requires authentication to access the Workspace.",
 						},
 						"shareable_url": schema.StringAttribute{
-							Computed: true,
+							Computed:    true,
+							Description: "A shareable URL that does not require authentication and it has randomly generated ID which can be deactivated.",
 						},
 					},
 				},
@@ -115,17 +124,22 @@ func (d *workspacesDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 	}
 }
 
-// Read refreshes the Terraform state with the latest data.
-func (d *workspacesDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
+// Read fetches the Terraform state with the latest data.
+func (d *workspacesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	// Get current state
 	var state WorkspacesModel
+	if resp.Diagnostics.Append(req.Config.Get(ctx, &state)...); resp.Diagnostics.HasError() {
+		return
+	}
 
-	res, err := d.client.WithAdminAuth().GetWorkspaces(ctx)
+	tflog.Trace(ctx, fmt.Sprintf("[READ] State: %s", state))
+
+	res, err := d.client.GetWorkspaces(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to read structurizr workspaces", err.Error())
 		return
 	}
 
-	// Map response body to model
 	for _, workspace := range res.Workspaces {
 		workspaceState := WorkspaceModel{
 			ID:           types.Int64Value(workspace.ID),
@@ -141,8 +155,8 @@ func (d *workspacesDataSource) Read(ctx context.Context, _ datasource.ReadReques
 		state.Workspaces = append(state.Workspaces, workspaceState)
 	}
 
-	// Set state
-	if resp.Diagnostics.Append(resp.State.Set(ctx, &state)...); resp.Diagnostics.HasError() {
-		return
-	}
+	tflog.Trace(ctx, fmt.Sprintf("[READ] Storing Workspaces: %+v", state))
+
+	// Set refreshed state to see if there is a diff
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
