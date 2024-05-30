@@ -4,13 +4,6 @@ before:
   hooks:
     - go mod tidy
     - make deps
-    - mkdir -p dist/tools/structurizr-cli dist/tools/structurizr-cli/lib
-    - cp -r internal/client/cli/tools/structurizr-cli/lib/*.jar dist/tools/structurizr-cli/lib/
-    - cp internal/client/cli/tools/structurizr-cli/version.txt dist/tools/structurizr-cli/
-    - cp internal/client/cli/tools/structurizr-cli/structurizr.sh dist/tools/structurizr-cli/structurizr-freebsd.sh
-    - cp internal/client/cli/tools/structurizr-cli/structurizr.sh dist/tools/structurizr-cli/structurizr-linux.sh
-    - cp internal/client/cli/tools/structurizr-cli/structurizr.sh dist/tools/structurizr-cli/structurizr-darwin.sh
-    - cp internal/client/cli/tools/structurizr-cli/structurizr.bat dist/tools/structurizr-cli/structurizr-windows.bat
 
 builds:
 - env:
@@ -41,10 +34,6 @@ builds:
 archives:
 - format: zip
   name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
-  files:
-    - dist/tools/structurizr-cli/lib/*.jar
-    - dist/tools/structurizr-cli/structurizr-{{.Os}}.sh
-    - dist/tools/structurizr-cli/structurizr-{{.Os}}.bat
 
 checksum:
   extra_files:
@@ -56,7 +45,7 @@ checksum:
 signs:
   - artifacts: checksum
     args:
-      # if you are using this in a GitHub action or some other automated pipeline, you 
+      # if you are using this in a GitHub action or some other automated pipeline, you
       # need to pass the batch flag to indicate its not interactive.
       - "--batch"
       - "--local-user"
@@ -71,7 +60,26 @@ release:
     - glob: 'terraform-registry-manifest.json'
       name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
   # If you want to manually examine the release before its live, uncomment this line:
-  draft: true
+  # draft: true
 
 changelog:
-  skip: true
+  use: github
+  format: "{{.SHA}}: {{.Message}} (@{{.AuthorUsername}})"
+  sort: asc
+  abbrev: -1
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: "Bug fixes"
+      regexp: '^.*?bug(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: Others
+      order: 999
+  filters:
+    exclude:
+      - wip(:|\()
+      - docs(
+      - chore(
+      - Merge
+      - test(
