@@ -79,7 +79,7 @@ changelog:
   filters:
     exclude:
       - wip(:|\()
-      - docs(
-      - chore(
+      - docs(:|\()
+      - chore(:|\()
       - Merge
-      - test(
+      - test(:|\()
